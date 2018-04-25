@@ -100,11 +100,13 @@ end
 
 def get_supported_speeds(interface)
   ecmd = EthtoolCmd.new
-  ecmd.cmd = ETHTOOL_GSET
+  ecmd.cmd = 0x01 #ETHTOOL_GSET
 
   ifreq = [interface, ecmd.data].pack("a16P")
   sock = Socket.new(Socket::AF_INET, Socket::SOCK_DGRAM, 0)
+  puts "Getting speed of #{interface} cmd #{ecmd.cmd} *ifreq #{[ifreq].pack("P").unpack("h8")[0]} ifreq #{ifreq.unpack("a16h8")} ecmd #{ecmd.data.unpack("h#{ecmd.data.length}")} ."
   sock.ioctl(SIOCETHTOOL, ifreq)
+  puts "Got speed of #{interface} cmd #{ecmd.cmd} *ifreq #{[ifreq].pack("P").unpack("h8")[0]} ifreq #{ifreq.unpack("a16h8")} ecmd #{ecmd.data.unpack("h#{ecmd.data.length}")} ."
 
   rv = ecmd.class.new
   rv.data = ifreq.unpack("a16P#{rv.data.length}")[1]
@@ -119,7 +121,7 @@ def get_supported_speeds(interface)
   speeds << "56g"  if (rv.supported & ((1 << 27) | (1 << 28) | (1 << 29) | (1 << 30))) != 0
   speeds
 rescue StandardError => e
-  puts "Failed to get ioctl for speed of #{interface}: #{e.message}"
+  puts "Failed to get ioctl for speed of #{interface}: #{e.message}  cmd #{ecmd.cmd} *ifreq #{[ifreq].pack("P").unpack("h8")[0]} ifreq #{ifreq.unpack("a16h8")} ecmd #{ecmd.data.unpack("h#{ecmd.data.length}")} ."
   ["1g", "0g"]
 end
 
@@ -154,14 +156,16 @@ def get_link_status(interface)
 
   ifreq = [interface, ecmd.data].pack("a16P")
   sock = Socket.new(Socket::AF_INET, Socket::SOCK_DGRAM, 0)
+  puts "Getting link status of #{interface} cmd #{ecmd.cmd} *ifreq #{[ifreq].pack("P").unpack("h8")[0]} ifreq #{ifreq.unpack("a16h8")} ecmd #{ecmd.data.unpack("h#{ecmd.data.length}")} ."
   sock.ioctl(SIOCETHTOOL, ifreq)
+  puts "Got link status of #{interface} cmd #{ecmd.cmd} *ifreq #{[ifreq].pack("P").unpack("h8")[0]} ifreq #{ifreq.unpack("a16h8")} ecmd #{ecmd.data.unpack("h#{ecmd.data.length}")} ."
 
   rv = ecmd.class.new
   rv.data = ifreq.unpack("a16P#{rv.data.length}")[1]
 
   rv.value != 0
 rescue StandardError => e
-  puts "Failed to get ioctl for link status of #{interface}: #{e.message}"
+  puts "Failed to get ioctl for link status of #{interface}: #{e.message}  cmd #{ecmd.cmd} *ifreq #{[ifreq].pack("P").unpack("h8")[0]} ifreq #{ifreq.unpack("a16h8")} ecmd #{ecmd.data.unpack("h#{ecmd.data.length}")} ."
   false
 end
 
